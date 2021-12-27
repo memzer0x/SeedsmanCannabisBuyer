@@ -7,9 +7,9 @@ import threading
 import smtplib, ssl
 
 SEED_URL = "https://www.seedsman.com/us_en/biscotti-mintz-feminised-seeds"
-MAIL_RECIPIENT = "mail_recipient@outlook.com"
+MAIL_RECIPIENT = "recipient@outlook.com"
 MAIL_SENDER = "seeeedsbot@outlook.com"
-MAIL_SENDER_PASSWORD = ""
+MAIL_SENDER_PASSWORD = "superstrongpassword"
 SMTP_PORT = 587
 SMTP_HOST = "smtp-mail.outlook.com"
 
@@ -57,9 +57,12 @@ def main():
     # When there is some available send an email using outlook smtp servers to i0x60d5@outlook.com
     while True:
         try:
-            for i in range(30):
+            for i in range(5):
                 t = threading.Thread(target=check_seeds)
                 t.start()
+            
+            for i in range(5):
+                t.join()
         except KeyboardInterrupt:
             print(colored("[-] Keyboard Interruption detected, stopping program.", "red"))
             exit(-2)
