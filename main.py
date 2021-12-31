@@ -29,16 +29,18 @@ def check_seeds(url, recipient, sender, password, seedname, smtphost, smtpport):
     response = requests.get(url)
     res_soup = BeautifulSoup(response.text, "html.parser")
     for i in res_soup.find_all("script"):
-        stock_json = re.search(r'\[\{"attribute501":"[0-9]{1,9}","stock":\[\{"store":"[0-9]{1,9}","qty":[0-9]{1,9},"status":"[a-zA-Z0-9_\-]{1,20}","message":"[a-zA-Z0-9_\- ]{1,20}"\}\]\}', i.text)
+        #stock_json = re.search(r'\[\{"attribute501":"[0-9]{1,9}","stock":\[\{"store":"[0-9]{1,9}","qty":[0-9]{1,9},"status":"[a-zA-Z0-9_\-]{1,20}","message":"[a-zA-Z0-9_\- ]{1,20}"\}\]\}', i.text)
+        stock_json = re.search(r'\[\{"attribute501":"[0-9]{1,9}",[a-zA-Z0-9%$!@# _+":,.]{1,100}\[\{"store":"[0-9]{1,10}","qty":[0-9]{1,100},"status":"[a-zA-Z0-9%$!@# _+":,.]{1,100}","message":"[a-zA-Z0-9%$!@# _+":,.]{1,100}"\}\]\}', i.text)
+        # if stock_json is None:
+        #     stock_json = re.search(r'\[\{"attribute501":"[0-9]{1,9}","message":"[a-zA-Z0-9_ ]{0,100}","stock":\[\{"store":"[0-9]{1,9}","qty":[0-9]{1,9},"status":"[a-zA-Z0-9_\-]{1,20}","message":"[a-zA-Z0-9_\- ]{1,20}"\}\]\}', i.text)
         if stock_json is not None:
             subset = json.loads(stock_json.group(0) + "]")
             # Make sure we have the right json string
             if subset[0]["attribute501"] != "131":
                 print(colored("[-] Failed to obtain strain information !", "red"))
                 exit(-1)
-
             # Check if it's in stock
-            if subset[0]["stock"][0]["qty"] != "0" and (subset[0]["stock"][0]["status"] != "out_of_stock" or subset[0]["stock"][0]["message"] != "Out of stock"):
+            if subset[0]["stock"][0]["qty"] != 0 and (subset[0]["stock"][0]["status"] != "out_of_stock" or subset[0]["stock"][0]["message"] != "Out of stock"):
                 print(colored("[+] Seeds in stock !", "green"))
                 send_mail(url, recipient, sender, password, seedname, smtphost, smtpport)
             else:
@@ -66,7 +68,7 @@ Go buy them now at the following link : {url}
 def get_seed_name(url):
     # Request the URL parse the title
     r = requests.get(url)
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text, "html.parser")
     for title in soup.find_all("span"):
         if title.get("class") is not None:
             for tag in title.get("class"):
@@ -101,12 +103,11 @@ def main():
     if options.password is not None:
         MAIL_SENDER_PASSWORD = str(options.password)
     else:
-        MAIL_SENDER_PASSWORD = "" # If you do not specify a password using commandline you're going to have to hardcode a value in here
+        MAIL_SENDER_PASSWORD = ""
 
     while True:
         check_seeds(SEED_URL, MAIL_RECIPIENT, MAIL_SENDER, MAIL_SENDER_PASSWORD, SEED_NAME, SMTP_HOST, SMTP_PORT)
     # Call check_seeds() with threading on and in an infinite loop until there is some available.
-    # When there is some available send an email using outlook smtp servers to i0x60d5@outlook.com
     while True:
         try:
             for i in range(5):
